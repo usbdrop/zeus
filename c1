@@ -53,9 +53,20 @@ for /f "tokens=2 delims=:" %%a in ('netsh wlan show interfaces ^| findstr /i "SS
 
 
 
-REM === Uptime systemu (start sesji) ===
-for /f "tokens=2,* delims= " %%a in ('net stats workstation ^| findstr /C:"Statystyka od"') do (
-    set "SESDUR=%%a %%b"
+REM === Szacowany czas sesji (uptime od startu) ===
+set "SESDUR=brak"
+
+for /f "tokens=2,* delims= " %%a in ('net stats workstation ^| find "Statystyka od"') do (
+    set "BOOTDATE=%%a"
+    set "BOOTTIME=%%b"
+)
+
+REM Połącz datę i godzinę startu
+set "BOOTDATETIME=%BOOTDATE% %BOOTTIME%"
+
+REM Użyj PowerShell tylko do obliczenia różnicy czasu
+for /f %%s in ('powershell -Command "(New-TimeSpan -Start (Get-Date '%BOOTDATETIME%')).TotalMinutes -as [int]"') do (
+    set "SESDUR=%%s"
 )
 
 
