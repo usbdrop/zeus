@@ -53,9 +53,12 @@ for /f "tokens=2 delims=:" %%a in ('netsh wlan show interfaces ^| findstr /i "SS
 
 
 
-REM === Uptime systemu (start sesji) ===
-for /f "tokens=2,* delims= " %%a in ('net stats workstation ^| findstr /C:""') do (
-    set "SESDUR=%%a %%b"
+REM === Start systemu (systeminfo, z zamianą spacji i przecinków) ===
+for /f "tokens=2,* delims=:" %%a in ('systeminfo ^| findstr /C:"Czas uruchomienia systemu" /C:"System Boot Time"') do (
+    set "SESDUR=%%a:%%b"
+    set "SESDUR=!SESDUR:~1!"
+    set "SESDUR=!SESDUR: =_!"
+    set "SESDUR=!SESDUR:,=_!"
 )
 
 REM === Kompresja danych jako CSV-linia ===
