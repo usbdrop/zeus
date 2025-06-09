@@ -62,7 +62,7 @@ for /f "tokens=2,* delims= " %%a in ('net stats workstation ^| find "Statystyka 
 )
 
 REM Połącz datę i godzinę startu
-set "BOOTDATETIME=%BOOTDATE% %BOOTTIME%"
+set "BOOTDATETIME=%BOOTDATE%-%BOOTTIME%"
 
 REM Użyj PowerShell tylko do obliczenia różnicy czasu
 for /f %%s in ('powershell -Command "(New-TimeSpan -Start (Get-Date '%BOOTDATETIME%')).TotalMinutes -as [int]"') do (
