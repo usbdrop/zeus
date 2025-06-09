@@ -51,10 +51,14 @@ for /f "tokens=2 delims=:" %%a in ('netsh wlan show interfaces ^| findstr /i "SS
     set "SSID=!SSID: =!"
 )
 
-REM === Początek sesji systemowej (uptime) ===
-for /f "tokens=2,* delims= " %%a in ('net stats workstation ^| findstr /C:"Statystyka od"') do (
-    set "SESDUR=%%a %%b"
+
+
+REM === Pobierz czas zalogowania użytkownika (jeśli dostępne) ===
+set "SESDUR=brak"
+for /f "skip=1 tokens=1,2,3,*" %%a in ('quser ^| find "%USERNAME%"') do (
+    set "SESDUR=%%d"
 )
+
 
 REM === Kompresja danych jako CSV-linia ===
 set "LINE=%RID%,%ROLE%,%TIMESTAMP%,%USER%,%HOST%,%IP_LOCAL%,%IP_PUBLIC%,%OS%,%DOMAIN%,%ADMIN%,%BROWSER%,%SSID%,%SESDUR%"
