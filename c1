@@ -3,7 +3,7 @@ setlocal ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 
 REM === Konfiguracja nośnika i roli/kampanii ===
 set "RID=usb01-1"
-set "ROLE=18"
+
 
 REM === Dane systemowe ===
 set "TIMESTAMP=%DATE%_%TIME%"
