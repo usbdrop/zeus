@@ -28,14 +28,9 @@ for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /C:"IPv4"') do (
     echo !ipraw! | findstr /C:"192.168." >nul && set "IP_LOCAL=!ipraw!"
 )
 
-REM === Publiczny IP przez nslookup lub curl (fallback) ===
-for /f "tokens=*" %%i in ('nslookup myip.opendns.com. resolver1.opendns.com ^| findstr /R "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*"') do (
-    set "IP_PUBLIC=%%i"
-)
-REM Jeśli nie zadziałało – curl fallback
-curl -s https://api.ipify.org > ip.tmp
-set /p IP_PUBLIC=<ip.tmp
-del ip.tmp
+REM === 🌍 IP publiczny ===
+set "IP_PUBLIC=brak"
+for /f %%p in ('curl -s ifconfig.me') do set "IP_PUBLIC=%%p"
 
 REM === Wersja systemu operacyjnego ===
 for /f "tokens=*" %%a in ('ver') do (
