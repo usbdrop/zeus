@@ -53,16 +53,13 @@ for /f "tokens=2 delims=:" %%a in ('netsh wlan show interfaces ^| findstr /i "SS
 
 
 
-REM Jeśli quser nie działa, użyj uptime z net stats jako zapas
 set "SESDUR=brak"
-for /f "skip=1 tokens=1-6,7,*" %%a in ('quser ^| find "%USERNAME%"') do (
-    set "SESDUR=%%g %%h"
+
+for /f "tokens=2,* delims=:" %%a in ('systeminfo ^| findstr /C:"Czas uruchomienia systemu" /C:"System Boot Time"') do (
+    set "SESDUR=%%a:%%b"
+    set "SESDUR=!SESDUR:~1!"
 )
-if "%SESDUR%"=="brak" (
-    for /f "tokens=2,* delims= " %%a in ('net stats workstation ^| findstr /C:"Statystyka od"') do (
-        set "SESDUR=%%a %%b"
-    )
-)
+
 
 
 REM === Kompresja danych jako CSV-linia ===
